@@ -9,6 +9,7 @@
     "毛皮配对",
     "扣杂竞价",
     "更正裁决",
+    "校准调整",
     "应付对账",
     "结算归档"
   ],
@@ -28,6 +29,7 @@
     "pairing",
     "auction",
     "correction",
+    "calibration",
     "reconcile",
     "archive"
   ],
@@ -63,6 +65,24 @@
     "repeated_header": "重复表头",
     "row_balanced": "行守恒",
     "money_balanced": "金额守恒",
-    "blocked": "阻断项"
+    "blocked": "阻断项",
+    "baseline": "称重基准",
+    "basis": "基准说明",
+    "original_kg": "原计价重 kg",
+    "adjusted_kg": "调整后计价重 kg",
+    "delta_kg": "重量差 kg",
+    "original_amount": "原应付 CNY",
+    "adjusted_amount": "调整后应付 CNY",
+    "adjustment": "调整额 CNY",
+    "payable": "可付款",
+    "decision": "处理结论",
+    "evidence": "重量证据",
+    "calibration_id": "校准记录",
+    "calibrated_at": "校准时间",
+    "scale": "秤台",
+    "offset_kg": "校准偏差 kg",
+    "factor": "校准系数",
+    "published_at": "发布时间",
+    "version_no": "发布版本"
   }
 }

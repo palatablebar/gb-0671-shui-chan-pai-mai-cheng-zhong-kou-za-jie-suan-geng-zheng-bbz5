@@ -7,6 +7,10 @@ document.querySelector('#filter').addEventListener('input',event=>{const text=ev
 const review=document.querySelector('#review');if(review)review.addEventListener('click',async()=>{try{const run=await fetch('/api/runs/'+review.dataset.id).then(r=>r.json());const result=await request('/api/runs/'+review.dataset.id+'/review',{revision:run.revision});feedback.textContent=result.status;}catch(error){feedback.textContent=error.message;}});
 const selected=new URL(location.href).searchParams.get('dataset');if(selected)document.querySelector('#dataset').value=selected;
 
+const publishButton=document.querySelector('#publish');
+if(publishButton)publishButton.addEventListener('click',async event=>{event.target.disabled=true;feedback.textContent='发布中…';try{const data=await request('/api/runs/'+publishButton.dataset.id+'/calibration/publish',{});feedback.textContent=data.reused?'该次校准已发布，未重复调整':'已发布 v'+data.version_no+' · 调整 '+data.adjustment+' CNY';location.reload();}catch(error){feedback.textContent=error.message;}finally{event.target.disabled=false;}});
+document.addEventListener('click',async event=>{const button=event.target.closest('.restore');if(!button)return;button.disabled=true;try{const data=await request('/api/runs/'+button.dataset.run+'/calibration/restore/'+button.dataset.pub,{});feedback.textContent='已恢复 v'+data.version_no+' · 调整 '+data.adjustment+' CNY';location.reload();}catch(error){feedback.textContent=error.message;button.disabled=false;}});
+
 const filePicker=document.querySelector('#csv-file');
 if(filePicker){
  const editor=document.querySelector('#csv-text');

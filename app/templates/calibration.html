@@ -1,0 +1,36 @@
+{% extends 'base.html' %}{% block content %}
+<div class="grid">
+  <section class="panel primary-panel">
+    <div class="panel__head"><h2>可付款调整</h2><span>{{ view.metrics['可付款票'] }} 票可付款 · {{ view.metrics['待复秤票'] }} 票待复秤</span></div>
+    <div class="scroll"><table class="ledger">
+      <thead><tr><th>票号</th><th>版本</th><th>称重基准</th><th>基准说明</th><th>原计价重 kg</th><th>调整后计价重 kg</th><th>原应付 CNY</th><th>调整后应付 CNY</th><th>调整额 CNY</th><th>已付 CNY</th><th>待付 CNY</th><th>处理结论</th><th>依据行</th></tr></thead>
+      <tbody>{% for row in view.rows %}<tr class="{% if row.decision!='可付款' %}row-pending{% endif %}"><td class="num">{{ row.ticket }}</td><td class="num">{{ row.version }}</td><td>{{ row.baseline }}</td><td title="{{ row.basis }}">{{ row.basis }}</td><td class="num">{{ row.net_kg }}</td><td class="num">{{ row.adjusted_net_kg or '—' }}</td><td class="num">{{ row.original_amount }}</td><td class="num">{{ row.adjusted_amount or '—' }}</td><td class="num">{{ row.adjustment if row.adjustment!='' else '—' }}</td><td class="num">{{ row.paid or '—' }}</td><td class="num">{{ row.due or '—' }}</td><td><span class="tag {{ 'tag-ok' if row.decision=='可付款' else 'tag-warn' }}">{{ row.decision }}</span></td><td class="num">{{ row.lines|join(',') }}</td></tr>{% else %}<tr><td>该批次没有校准影响票。</td></tr>{% endfor %}</tbody>
+    </table></div>
+    <div class="panel__bar"><label>样例 <select id="dataset"><option value="dirty" {% if state.source=='dirty' %}selected{% endif %}>现场脏批</option><option value="clean" {% if state.source=='clean' %}selected{% endif %}>核验清批</option><option value="legacy" {% if state.source=='legacy' %}selected{% endif %}>旧编码批</option><option value="calib" {% if state.source=='calib' %}selected{% endif %}>校准影响批</option></select></label><label>票号 <input id="filter" placeholder="筛选票号"></label></div>
+  </section>
+  <div class="stack">
+    <div class="panel">
+      <div class="panel__head"><h2>校准记录</h2><span>{{ view.metrics['调整额_CNY'] }} CNY</span></div>
+      {% if state.calibration.record %}<div class="kv">
+        <div><small>记录</small><b class="mono">{{ state.calibration.record.id or '—' }}</b></div>
+        <div><small>秤台</small><b class="mono">{{ state.calibration.record.scale }}</b></div>
+        <div><small>校准系数</small><b class="mono">{{ state.calibration.record.factor }}</b></div>
+        <div><small>偏差方向</small><b>{% if state.calibration.parsed %}{{ '校准前偏轻，需上调' if state.calibration.parsed.factor|float > 1 else '校准前偏重，需下调' }}{% else %}记录无效，未参与修正{% endif %}</b></div>
+        <div><small>校准时间</small><b class="mono">{{ state.calibration.record.calibrated_at or '—' }}</b></div>
+        <div><small>影响票</small><b class="mono">{{ state.calibration.record.tickets|join(' ') }}</b></div>
+      </div>{% else %}<div class="empty">本批未携带校准记录，按原成交价处理。</div>{% endif %}
+      <div class="panel__bar"><button id="publish" class="btn primary" data-id="{{ state.manifest.run_id }}">发布可付款调整</button><span class="mono">生效 {{ state.active_publication.version_no if state.active_publication else '—' }}</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel__head"><h2>发布版本</h2><span id="pub-count">{{ state.publications|length if state.publications else 0 }} 版</span></div>
+      <div id="pub-list" class="pub-list">{% for pub in state.publications or [] %}<div class="pub-row"><span class="mono">v{{ pub.version_no }}</span><span>{{ pub.adjustment }} CNY</span><span class="tag {{ 'tag-ok' if pub.status=='已发布' else '' }}">{{ pub.status }}</span>{% if pub.status!='已发布' %}<button class="btn restore" data-run="{{ state.manifest.run_id }}" data-pub="{{ pub.id }}">恢复</button>{% endif %}</div>{% else %}<div class="empty">尚未发布。发布只写发布记录，原始称重与成交证据不变。</div>{% endfor %}</div>
+    </div>
+    <section class="panel">
+      <div class="panel__head"><h2>待复秤 / 待处理</h2><span>{{ state.calibration_pending|length }} 票</span></div>
+      {% if state.calibration_pending %}<ul class="pending-list">{% for row in state.calibration_pending %}<li><b class="mono">{{ row.ticket }} v{{ row.version }}</b><span>{{ row.code }}</span><small>{{ row.detail }}</small></li>{% endfor %}</ul>{% else %}<div class="empty">没有待复秤票，全部影响票已纳入可付款结果。</div>{% endif %}
+    </section>
+    <section class="panel"><div class="panel__head"><h2>隔离原因</h2><span>{{ state.quarantine|length }} 行</span></div>{{ ledger(state.quarantine) }}</section>
+  </div>
+</div>
+<section class="panel log-panel"><div class="panel__head"><h2>采集日志</h2><span id="log-state">滚动中</span></div><div id="log-tail" class="log-tail">{% for row in state.quarantine %}<div><time>08:00:{{ '%02d'|format(loop.index) }}</time><span class="lamp warn"></span> WARN　行 {{ row.line }}　{{ row.code }}　{{ row.detail }}</div>{% endfor %}{% for row in state.calibration_pending %}<div><time>14:00:00</time><span class="lamp warn"></span> PENDING　{{ row.ticket }}　{{ row.code }}　{{ row.detail }}</div>{% endfor %}</div></section>
+{% endblock %}

@@ -4,6 +4,10 @@ REASONS = {
     'BAD_UNIT':'单位不受支持', 'UNKNOWN_REFERENCE':'引用对象不存在', 'INVALID_RANGE':'范围错误',
     'VERSION_CONFLICT':'版本冲突', 'EMPTY_FILE':'空文件', 'BLANK_FILE':'全空行',
     'HEADER_ONLY':'仅有表头', 'STALE_VERSION':'复核版本已更新', 'NOT_FOUND':'批次不存在',
+    'CALIBRATION_UNCOVERED':'校准记录未覆盖', 'REWEIGH_CONFLICT':'复秤证据冲突',
+    'REWEIGH_VERSION_MISMATCH':'复秤版本不符', 'WEIGHT_EVIDENCE_CONFLICT':'重量证据冲突',
+    'NOTHING_TO_PUBLISH':'无可发布调整', 'VERSION_BLOCKED':'版本冲突阻断发布',
+    'INPUT_SNAPSHOT_MISSING':'缺少源快照', 'BAD_EVIDENCE':'校准证据无效',
 }
 def reject(state, record, code, detail):
     state['quarantine'].append({'line':record.get('_line',0),'id':record.get('id',''),

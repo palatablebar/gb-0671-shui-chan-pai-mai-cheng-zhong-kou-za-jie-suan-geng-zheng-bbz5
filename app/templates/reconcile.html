@@ -1,1 +1,33 @@
-{% extends 'base.html' %}{% block content %}<div class="grid"><section class="panel primary-panel"><div class="panel__head"><h2>应付对账</h2><span>{{ view.rows|length }} 条</span></div>{{ ledger(view.rows) }}<div class="panel__bar"><label>样例 <select id="dataset"><option value="dirty" {% if state.source=='dirty' %}selected{% endif %}>现场脏批</option><option value="clean" {% if state.source=='clean' %}selected{% endif %}>核验清批</option><option value="legacy" {% if state.source=='legacy' %}selected{% endif %}>旧编码批</option></select></label><label>票号 <input id="filter" placeholder="筛选票号"></label></div></section><div class="stack"><div class="panel"><div class="panel__head"><h2>称重轨迹</h2><span>21 票</span></div><div class="trace">{% for p in state.pairs[:8] %}<div><span>{{ p.ticket }}</span><i style="width:{{ p.gross_kg|float }}px"></i><b>{{ p.net_kg }} kg</b></div>{% endfor %}</div></div><section class="panel"><div class="panel__head"><h2>隔离原因</h2><span>{{ state.quarantine|length }} 行</span></div>{{ ledger(state.quarantine) }}</section></div></div><section class="panel log-panel"><div class="panel__head"><h2>采集日志</h2><span id="log-state">滚动中</span></div><div id="log-tail" class="log-tail">{% for row in state.quarantine %}<div><time>08:00:{{ '%02d'|format(loop.index) }}</time><span class="lamp warn"></span> WARN　行 {{ row.line }}　{{ row.code }}　{{ row.detail }}</div>{% endfor %}</div></section>{% endblock %}
+{% extends 'base.html' %}{% block content %}
+<div class="grid">
+  <section class="panel primary-panel">
+    <div class="panel__head"><h2>应付对账</h2><span>{{ '行与金额守恒' if state.balance.money_balanced and state.balance.row_balanced else '账未平' }}</span></div>
+    <div class="scroll"><table class="ledger">
+      <thead><tr><th>口径</th><th>票数</th><th>金额 CNY</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>原更正账</td><td class="num">{{ state.final|length }}</td><td class="num">{{ state.balance.final_amount }}</td><td>更正裁决生效票，校准前</td></tr>
+        <tr><td>可付款调整</td><td class="num">{{ state.adjustments|length }}</td><td class="num">{{ state.balance.amount }}</td><td>校准调整后可付款票</td></tr>
+        <tr><td>其中调整额</td><td class="num">—</td><td class="num">{{ state.balance.adjustment }}</td><td>可付款票的原值到调整后差异</td></tr>
+        <tr><td>已付</td><td class="num">{{ state.adjustments|length }}</td><td class="num">{{ state.balance.paid }}</td><td>各版本最大累计已付</td></tr>
+        <tr><td>待付</td><td class="num">{{ state.adjustments|length }}</td><td class="num">{{ state.balance.due }}</td><td>负值表示待收回</td></tr>
+        <tr class="row-pending"><td>待复秤 / 待处理</td><td class="num">{{ state.balance.pending_tickets }}</td><td class="num">{{ state.balance.pending_amount }}</td><td>未计入可付款，按原值挂账</td></tr>
+      </tbody>
+    </table></div>
+    <div class="panel__bar"><label>样例 <select id="dataset"><option value="dirty" {% if state.source=='dirty' %}selected{% endif %}>现场脏批</option><option value="clean" {% if state.source=='clean' %}selected{% endif %}>核验清批</option><option value="legacy" {% if state.source=='legacy' %}selected{% endif %}>旧编码批</option><option value="calib" {% if state.source=='calib' %}selected{% endif %}>校准影响批</option></select></label><label>票号 <input id="filter" placeholder="筛选票号"></label></div>
+  </section>
+  <div class="stack">
+    <div class="panel"><div class="panel__head"><h2>守恒校验</h2><span>输入 {{ state.balance.input }} 行</span></div>
+      <div class="kv">
+        <div><small>行守恒</small><b>{{ '通过' if state.balance.row_balanced else '不通过' }}</b></div>
+        <div><small>金额守恒</small><b>{{ '通过' if state.balance.money_balanced else '不通过' }}</b></div>
+        <div><small>采纳行</small><b class="mono">{{ state.balance.accepted }}</b></div>
+        <div><small>隔离行</small><b class="mono">{{ state.balance.quarantined }}</b></div>
+        <div><small>空行 / 重复表头</small><b class="mono">{{ state.balance.blank }} / {{ state.balance.repeated_header }}</b></div>
+        <div><small>阻断项</small><b class="mono">{{ state.balance.blocked }}</b></div>
+      </div>
+    </div>
+    <section class="panel"><div class="panel__head"><h2>隔离原因</h2><span>{{ state.quarantine|length }} 行</span></div>{{ ledger(state.quarantine) }}</section>
+  </div>
+</div>
+<section class="panel log-panel"><div class="panel__head"><h2>采集日志</h2><span id="log-state">滚动中</span></div><div id="log-tail" class="log-tail">{% for row in state.quarantine %}<div><time>08:00:{{ '%02d'|format(loop.index) }}</time><span class="lamp warn"></span> WARN　行 {{ row.line }}　{{ row.code }}　{{ row.detail }}</div>{% endfor %}</div></section>
+{% endblock %}
